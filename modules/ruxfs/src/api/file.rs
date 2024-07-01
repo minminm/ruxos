@@ -119,6 +119,11 @@ impl Metadata {
     pub const fn blocks(&self) -> u64 {
         self.0.blocks()
     }
+
+    /// Returns the inner raw metadata [`fops::FileAttr`].
+    pub const fn raw_metadata(&self) -> &fops::FileAttr {
+        &self.0
+    }    
 }
 
 impl fmt::Debug for Metadata {

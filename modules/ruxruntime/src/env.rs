@@ -21,6 +21,10 @@ pub static mut argv: *mut *mut c_char = ptr::null_mut();
 /// Save cmdline argments
 static mut RUX_ARGV: Vec<*mut c_char> = Vec::new();
 
+pub unsafe fn get_argc() -> i32 {
+    RUX_ARGV.len() as i32
+}
+
 /// A pointer pointing to RUX_ENVIRON
 #[allow(non_upper_case_globals)]
 #[no_mangle]

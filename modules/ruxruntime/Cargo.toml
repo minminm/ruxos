@@ -34,6 +34,7 @@ signal = []
 
 musl = ["dep:ruxfutex"]
 
+std = ["ruxhal/tls", "ruxtask?/tls"]
 
 [dependencies]
 cfg-if = "1.0"

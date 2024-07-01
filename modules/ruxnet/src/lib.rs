@@ -17,6 +17,8 @@
 //!
 //! - [`TcpSocket`]: A TCP socket that provides POSIX-like APIs.
 //! - [`UdpSocket`]: A UDP socket that provides POSIX-like APIs.
+//! - [`IpAddr`], [`Ipv4Addr`]: IP addresses (either v4 or v6) and IPv4 addresses.
+//! - [`SocketAddr`]: IP address with a port number.
 //! - [`dns_query`]: Function for DNS query.
 //!
 //! # Cargo Features
@@ -56,6 +58,7 @@ cfg_if::cfg_if! {
 pub use self::net_impl::TcpSocket;
 pub use self::net_impl::UdpSocket;
 pub use self::net_impl::{dns_query, poll_interfaces};
+pub use smoltcp::wire::{IpAddress as IpAddr, IpEndpoint as SocketAddr, Ipv4Address as Ipv4Addr};
 
 use ruxdriver::{prelude::*, AxDeviceContainer};
 

@@ -58,9 +58,7 @@ fn main() {
     print_prompt();
 
     loop {
-        if stdin.read(&mut buf[cursor..cursor + 1]).ok() != Some(1) {
-            continue;
-        }
+        stdin.read(&mut buf[cursor..cursor + 1]).unwrap();
         if buf[cursor] == b'\x1b' {
             buf[cursor] = b'^';
         }

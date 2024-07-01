@@ -138,3 +138,25 @@ pub fn ax_poll_interfaces() -> AxResult {
     ruxnet::poll_interfaces();
     Ok(())
 }
+
+const fn into_core_ipaddr(ip: axnet::IpAddr) -> IpAddr {
+    match ip {
+        axnet::IpAddr::Ipv4(ip) => IpAddr::V4(unsafe { core::mem::transmute(ip.0) }),
+    }
+}
+
+pub fn ax_get_addr_info(
+    domain_name: &str,
+    port: Option<u16>,
+) -> AxResult<alloc::vec::Vec<SocketAddr>> {
+    let domain_to_query = if domain_name == "localhost" {
+        "127.0.0.1"
+    } else {
+        domain_name
+    };
+
+    Ok(axnet::dns_query(domain_to_query)?
+        .into_iter()
+        .map(|ip| SocketAddr::new(ip, port.unwrap_or(0)))
+        .collect())
+}

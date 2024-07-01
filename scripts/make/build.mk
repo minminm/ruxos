@@ -3,6 +3,12 @@
 include scripts/make/cargo.mk
 include scripts/make/features.mk
 
+ifeq ($(APP_TYPE), rust_std)
+  include scripts/make/build_std.mk
+else
+build_std:
+endif
+
 ifeq ($(APP_TYPE), c)
   ifeq ($(MUSL), y)
     include scripts/make/build_musl.mk
@@ -35,11 +41,16 @@ else ifeq ($(filter $(MAKECMDGOALS),clippy unittest unittest_no_fail_fast),) # n
   endif
 endif
 
-_cargo_build:
+_cargo_build: build_std
 	@printf "    $(GREEN_C)Building$(END_C) App: $(APP_NAME), Arch: $(ARCH), Platform: $(PLATFORM_NAME), App type: $(APP_TYPE)\n"
 ifeq ($(APP_TYPE), rust)
 	$(call cargo_build,--manifest-path $(APP)/Cargo.toml,$(RUX_FEAT) $(LIB_FEAT) $(APP_FEAT))
 	@cp $(rust_elf) $(OUT_ELF)
+else ifeq ($(APP_TYPE), rust_std)
+#	force rebuild the app to link the up-to-date std library
+	@rm -rf $(rust_target_dir)/deps
+	$(call cargo_build,--manifest-path $(APP)/Cargo.toml, $(APP_FEAT))
+	@cp $(rust_elf) $(OUT_ELF)  
 else ifeq ($(APP_TYPE), c)
   ifeq ($(MUSL), y)
 		$(call cargo_build,-p ruxmusl,$(RUX_FEAT) $(LIB_FEAT))

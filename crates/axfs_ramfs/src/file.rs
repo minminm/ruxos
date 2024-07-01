@@ -61,5 +61,10 @@ impl VfsNodeOps for FileNode {
         Ok(buf.len())
     }
 
+    /// fake
+    fn fsync(&self) -> VfsResult {
+        Ok(())
+    }
+    
     impl_vfs_non_dir_default! {}
 }

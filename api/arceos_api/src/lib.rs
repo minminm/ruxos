@@ -15,6 +15,8 @@
 #![feature(ip_in_core)]
 #![feature(doc_auto_cfg)]
 #![feature(doc_cfg)]
+#![feature(exposed_provenance)] // TODO: remove this feature
+#![feature(strict_provenance)]  // TODO: remove this feature
 #![allow(unused_imports)]
 
 #[cfg(any(

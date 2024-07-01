@@ -70,6 +70,20 @@ pub mod console {
             putchar(*c);
         }
     }
+
+    /// Read a slice of bytes from the console.
+    pub fn read_bytes(bytes: &mut [u8]) -> usize {
+        let mut len = 0;
+        while len < bytes.len() {
+            if let Some(c) = getchar() {
+                bytes[len] = c;
+                len += 1;
+            } else {
+                break;
+            }
+        }
+        len
+    }    
 }
 
 /// Miscellaneous operation, e.g. terminate the system.

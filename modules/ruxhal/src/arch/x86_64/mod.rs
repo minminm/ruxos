@@ -10,7 +10,7 @@
 mod context;
 mod gdt;
 mod idt;
-
+#[cfg(any(target_os = "none", target_os = "ruxos"))]
 mod trap;
 
 use core::arch::asm;

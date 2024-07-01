@@ -59,7 +59,7 @@ extern crate alloc;
 #[cfg(feature = "alloc")]
 mod env;
 #[cfg(feature = "alloc")]
-pub use self::env::{argv, environ, environ_iter, RUX_ENVIRON};
+pub use self::env::{argv, environ, environ_iter, RUX_ENVIRON, get_argc};
 #[cfg(feature = "alloc")]
 use self::env::{boot_add_environ, init_argv};
 use core::ffi::{c_char, c_int};
@@ -85,7 +85,10 @@ extern "C" fn fini_dummy() {}
 extern "C" fn ldso_dummy() {}
 
 extern "C" {
+    #[cfg(not(feature = "std"))]
     fn main(argc: c_int, argv: *mut *mut c_char) -> c_int;
+
+    #[cfg(not(feature = "std"))]
     fn __libc_start_main(
         main: unsafe extern "C" fn(argc: c_int, argv: *mut *mut c_char) -> c_int,
         argc: c_int,
@@ -94,6 +97,9 @@ extern "C" {
         fini_dummy: extern "C" fn(),
         ldso_dummy: extern "C" fn(),
     ) -> c_int;
+
+    #[cfg(feature = "std")]
+    fn runtime_entry(argc: i32, argv: *const *const u8, env: *const *const u8);
 }
 
 struct LogIfImpl;
@@ -277,31 +283,58 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
     }
 
     // environ variables and Command line parameters initialization
-    #[cfg(feature = "alloc")]
+    #[cfg(not(feature = "std"))]
     unsafe {
-        let mut argc: c_int = 0;
-        init_cmdline(&mut argc);
-        #[cfg(not(feature = "musl"))]
-        main(argc, argv);
-        #[cfg(feature = "musl")]
-        __libc_start_main(main, argc, argv, init_dummy, fini_dummy, ldso_dummy);
+        #[cfg(feature = "alloc")]
+        {
+            let mut argc: c_int = 0;
+            init_cmdline(&mut argc);
+            #[cfg(not(feature = "musl"))]
+            main(argc, argv);
+            #[cfg(feature = "musl")]
+            __libc_start_main(main, argc, argv, init_dummy, fini_dummy, ldso_dummy);
+        }
+
+        #[cfg(not(feature = "alloc"))]
+        {
+            #[cfg(not(feature = "musl"))]
+            main(0, core::ptr::null_mut());
+    
+            #[cfg(feature = "musl")]
+            __libc_start_main(
+                main,
+                0,
+                core::ptr::null_mut(),
+                init_dummy,
+                fini_dummy,
+                ldso_dummy,
+            )
+        };
     }
 
-    #[cfg(not(feature = "alloc"))]
-    unsafe {
-        #[cfg(not(feature = "musl"))]
-        main(0, core::ptr::null_mut());
+    #[cfg(feature = "std")]
+    {
+        // Notice: we HAVE to keep _tls alive within this block,
+        // or we got a exception #PF.
+        // info!("here");
+        #[cfg(all(not(feature = "multitask")))]
+        {
+            info!("Initialize thread local storage...");
+            init_tls();
+        }
 
-        #[cfg(feature = "musl")]
-        __libc_start_main(
-            main,
-            0,
-            core::ptr::null_mut(),
-            init_dummy,
-            fini_dummy,
-            ldso_dummy,
-        )
-    };
+        #[cfg(feature = "alloc")]
+        {
+            let mut argc: c_int = 0;
+            init_cmdline(&mut argc);
+            info!("Start std::runtime_entry ...");
+            unsafe {
+                // And finally start the application.
+    
+                runtime_entry(argc, argv as *const *const u8, environ as *const *const u8);
+            }
+        }
+    }
 
     #[cfg(feature = "multitask")]
     ruxtask::exit(0);

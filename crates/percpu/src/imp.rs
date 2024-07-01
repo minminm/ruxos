@@ -12,7 +12,7 @@ const fn align_up(val: usize) -> usize {
     (val + PAGE_SIZE - 1) & !(PAGE_SIZE - 1)
 }
 
-#[cfg(not(target_os = "none"))]
+#[cfg(not(any(target_os = "none", target_os = "ruxos")))]
 static PERCPU_AREA_BASE: spin::once::Once<usize> = spin::once::Once::new();
 
 /// Returns the per-CPU data area size for one CPU.
