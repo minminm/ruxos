@@ -23,7 +23,7 @@ RUSTFLAGS += \
   -Z force-unstable-if-unmarked \
   --cfg bootstrap
 
-$(rustlib_dir):
+$(rustlib_dir): fetch_code
 	@printf "    $(GREEN_C)Creating$(END_C) sysroot\n"
 	$(call run_cmd,mkdir,-p $(rustlib_dir) $(rustlib_host_dir))
 	$(call run_cmd,ln,-sf $(rust_src)/target/$(TARGET)/release/deps $(rustlib_dir)/lib)
