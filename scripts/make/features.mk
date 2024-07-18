@@ -21,7 +21,7 @@ ifeq ($(APP_TYPE),c)
   lib_features := fp_simd alloc irq sched_rr paging multitask fs net fd pipe select poll epoll random-hw signal
 else ifeq ($(APP_TYPE),rust_std)
   ax_feat_prefix := ruxfeat/
-  lib_feat_prefix := arceos_api/
+  lib_feat_prefix := rust_std_api/
   lib_features := fp_simd alloc multitask fs net fd pipe select poll epoll random-hw signal
 else
   # TODO: it's better to use `ruxfeat/` as `ax_feat_prefix`, but all apps need to have `ruxfeat` as a dependency
@@ -56,7 +56,8 @@ endif
 override FEATURES := $(strip $(FEATURES))
 
 ax_feat :=
-lib_feat := net fs multitask
+lib_feat := net fs
+# lib_feat := net fs multitask
 
 ifneq ($(filter $(LOG),off error warn info debug trace),)
   ax_feat += log-level-$(LOG)

@@ -18,3 +18,5 @@ apps/c/redis/
 apps/c/iperf/
 apps/c/wamr/
 apps/c/nginx/
+
+/sysroot

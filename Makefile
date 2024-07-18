@@ -49,6 +49,7 @@ A ?= apps/c/helloworld
 APP ?= $(A)
 FEATURES ?=
 APP_FEATURES ?=
+STD ?= n
 
 # QEMU options
 BLK ?= n
@@ -80,13 +81,24 @@ ENVS ?=
 # Libc options
 MUSL ?= n
 
+apps_src := $(CURDIR)/apps/std
+remote_repo_apps := https://github.com/minminm/std_apps.git
+toml_src := $(CURDIR)/crates/toml
+remote_repo_toml := https://github.com/minminm/toml.git
+branch := feature_ruxos
+cargo_toml := $(CURDIR)/Cargo.toml
+
 # App type
 ifeq ($(wildcard $(APP)),)
   $(error Application path "$(APP)" is not valid)
 endif
 
 ifneq ($(wildcard $(APP)/Cargo.toml),)
-  APP_TYPE := rust
+  ifeq ($(STD), y)
+    APP_TYPE := rust_std
+  else
+    APP_TYPE := rust
+  endif
 else
   APP_TYPE := c
 endif
@@ -141,6 +153,14 @@ else ifeq ($(ARCH), aarch64)
   endif
 else
   $(error "ARCH" must be one of "x86_64", "riscv64", or "aarch64")
+endif
+
+ifeq ($(APP_TYPE), rust_std)
+  ifeq ($(ARCH), aarch64)
+    TARGET := aarch64-unknown-ruxos
+  else
+    $(error "ARCH" must be "aarch64" when "STD" is enabled)
+  endif
 endif
 
 export TARGET_CC = $(CC)
@@ -268,7 +288,7 @@ else
 	$(call make_disk_image,fat32,$(DISK_IMG))
 endif
 
-clean: clean_c clean_musl
+clean: clean_c clean_musl cleam_std
 	rm -rf $(APP)/*.bin $(APP)/*.elf
 	cargo clean
 
@@ -279,6 +299,52 @@ clean_c::
 clean_musl:
 	rm -rf ulib/ruxmusl/build_*
 	rm -rf ulib/ruxmusl/install
+
+clean_std:
+	rm -rf third_party/rust/target
+	rm -rf sysroot
+ifneq ($(wildcard third_party/rust),)
+	cd third_party/rust && cargo clean
+endif
+
+clean_std_deep: clean_std
+	rm -rf apps/std
+	python3 $(CURDIR)/scripts/make/update_cargo_toml.py --cargo_toml_path $(cargo_toml) --apps_src_path $(apps_src) --mode delete
+	rm -rf third_party
+	rm -rf crates/toml
+	$(call reset_for_std)
+
+fetch_std_apps:
+ifeq ($(wildcard $(apps_src)),)
+	@printf "    $(GREEN_C)Cloning$(END_C) std_apps repository\n"
+	git clone $(remote_repo_apps) $(apps_src);
+	@printf "    $(GREEN_C)Updating$(END_C) Cargo.toml with new crate paths\n"
+	python3 $(CURDIR)/scripts/make/update_cargo_toml.py --cargo_toml_path $(cargo_toml) --apps_src_path $(apps_src)
+else
+	@printf "    $(GREEN_C)Fetching$(END_C) std_apps repository updates\n"
+	cd $(apps_src) && git fetch
+	cd $(apps_src) && git pull
+	@printf "    $(GREEN_C)Updating$(END_C) Cargo.toml with new crate paths\n"
+	python3 $(CURDIR)/scripts/make/update_cargo_toml.py --cargo_toml_path $(cargo_toml) --apps_src_path $(apps_src)
+endif
+
+fetch_toml_edit_patch:
+ifeq ($(wildcard $(toml_src)),)
+	@printf "    $(GREEN_C)Cloning$(END_C) toml repository\n"
+	git clone $(remote_repo_toml) $(toml_src);
+	cd $(toml_src) && git checkout $(branch)
+else
+	@printf "    $(GREEN_C)Fetching$(END_C) toml repository updates\n"
+	cd $(toml_src) && git fetch
+	cd $(toml_src) && git checkout $(branch)
+	cd $(toml_src) && git pull origin $(branch)
+endif
+
+prepare_for_std: fetch_toml_edit_patch fetch_std_apps
+	rustup toolchain install nightly-2023-12-01
+
+reset_for_std:
+	rustup toolchain uninstall nightly-2023-12-01
 
 .PHONY: all build disasm run justrun debug clippy fmt fmt_c test test_no_fail_fast clean clean_c\
         clean_musl doc disk_image debug_no_attach prebuild _force

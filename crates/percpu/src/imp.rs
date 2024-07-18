@@ -32,7 +32,7 @@ pub fn percpu_area_size() -> usize {
 #[doc(cfg(not(feature = "sp-naive")))]
 pub fn percpu_area_base(cpu_id: usize) -> usize {
     cfg_if::cfg_if! {
-        if #[cfg(target_os = "none")] {
+        if #[cfg(any(target_os = "none", target_os = "ruxos"))] {
             extern "C" {
                 fn _percpu_start();
             }
@@ -74,7 +74,7 @@ pub fn get_local_thread_pointer() -> usize {
             if #[cfg(target_arch = "x86_64")] {
                 tp = if cfg!(target_os = "linux") {
                     SELF_PTR.read_current_raw()
-                } else if cfg!(target_os = "none") {
+                } else if cfg!(any(target_os = "none", target_os = "ruxos")) {
                     x86::msr::rdmsr(x86::msr::IA32_GS_BASE) as usize
                 } else {
                     unimplemented!()
@@ -107,7 +107,7 @@ pub fn set_local_thread_pointer(cpu_id: usize) {
                         in("edi") ARCH_SET_GS,
                         in("rsi") tp,
                     );
-                } else if cfg!(target_os = "none") {
+                } else if cfg!(any(target_os = "none", target_os = "ruxos")) {
                     x86::msr::wrmsr(x86::msr::IA32_GS_BASE, tp as u64);
                 } else {
                     unimplemented!()

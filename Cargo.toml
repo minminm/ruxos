@@ -54,6 +54,7 @@ members = [
     "api/ruxfeat",
     "api/arceos_api",
     "api/ruxos_posix_api",
+    "api/rust_std_api",
 
     "ulib/axstd",
     "ulib/ruxlibc",
@@ -62,6 +63,7 @@ members = [
     "apps/display/basic_painting",
     "apps/display/draw_map",
     "apps/fs/shell",
+
 ]
 
 [profile.release]

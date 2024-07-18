@@ -177,5 +177,8 @@ fn main() -> Result<()> {
     println!("cargo:rerun-if-changed={}", config_path.display());
     println!("cargo:rerun-if-env-changed=RUX_PLATFORM");
     println!("cargo:rerun-if-env-changed=RUX_SMP");
+
+    let sysroot = "/mnt/c/Users/MIN/Documents/ruxos/sysroot";
+    println!("cargo:rustc-env=RUSTFLAGS=--sysroot {}", sysroot);
     Ok(())
 }

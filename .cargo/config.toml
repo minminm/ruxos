@@ -1,0 +1,8 @@
+[build]
+rustflags = [
+    "--sysroot=/mnt/c/Users/MIN/Documents/ruxos/sysroot",
+    "-C", "link-arg=-T/mnt/c/Users/MIN/Documents/ruxos/modules/ruxhal/linker_aarch64-qemu-virt.lds",
+    "-C", "link-arg=-no-pie",
+    "-C", "embed-bitcode=yes",
+    "-Z", "force-unstable-if-unmarked"
+]

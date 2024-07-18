@@ -38,11 +38,12 @@
 #![feature(doc_cfg)]
 #![feature(doc_auto_cfg)]
 
+#[macro_use]
+extern crate log;
+extern crate alloc;
+
 cfg_if::cfg_if! {
     if #[cfg(feature = "multitask")] {
-        #[macro_use]
-        extern crate log;
-        extern crate alloc;
 
         mod run_queue;
         mod task;

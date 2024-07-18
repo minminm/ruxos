@@ -67,4 +67,4 @@ $(OUT_ELF): _cargo_build
 $(OUT_BIN): $(OUT_ELF)
 	$(call run_cmd,$(OBJCOPY),$(OUT_ELF) --strip-all -O binary $@)
 
-.PHONY: _cargo_build
+.PHONY: _cargo_build build_std
